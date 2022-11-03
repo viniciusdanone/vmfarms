@@ -1,0 +1,121 @@
+# Source: vmfarms/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmfarms
+  labels:
+    app.kubernetes.io/name: vmfarms
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: vmfarms
+    app.kubernetes.io/instance: vmfarms
+---
+# Source: vmfarms/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmfarms
+  labels:
+    app.kubernetes.io/name: vmfarms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vmfarms
+  template:
+    metadata:
+      annotations:
+      labels:
+        app.kubernetes.io/name: vmfarms
+    spec:
+      containers:
+        - name: vmfarms
+          image: "viniciusdanone/vmfarms:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            successThreshold: 5
+            periodSeconds: 10
+          resources:
+            {}
+          securityContext:
+            {}
+---
+# Source: vmfarms/templates/hpa.yaml
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vmfarms
+  labels:
+    app.kubernetes.io/name: vmfarms
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: vmfarms
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 60
+---
+# Source: vmfarms/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vmfarms
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+spec:
+  rules:
+    - host: "viniciusdanone.vmfars.local"
+      http:
+        paths:
+        - path: /
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: ssl-redirect
+              port:
+                name: use-annotation
+        - backend:
+            service:
+              name: vmfarms
+              port:
+                number: 8080
+          path: /
+          pathType: Prefix
+
