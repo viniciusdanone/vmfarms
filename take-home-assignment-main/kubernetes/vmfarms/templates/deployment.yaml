@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vmfarms.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "vmfarms.fullname" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "vmfarms.fullname" . }}
+  template:
+    metadata:
+      annotations:
+      labels:
+        app.kubernetes.io/name: {{ include "vmfarms.fullname" . }}
+    spec:
+      containers:
+        - name: vmfarms
+          image: "{{.Values.image.repository}}"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            successThreshold: 5
+            periodSeconds: 10
+          resources:
+            {}
+          securityContext:
+            {}

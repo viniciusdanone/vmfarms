@@ -1,0 +1,17 @@
+# Source: vmfarms/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmfarms
+  labels:
+    app.kubernetes.io/name: vmfarms
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: vmfarms
+    app.kubernetes.io/instance: vmfarms

@@ -1,0 +1,43 @@
+piVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmfarms
+  labels:
+    app.kubernetes.io/name: vmfarms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vmfarms
+  template:
+    metadata:
+      annotations:
+      labels:
+        app.kubernetes.io/name: vmfarms
+    spec:
+      containers:
+        - name: vmfarms
+          image: "viniciusdanone/vmfarms:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            successThreshold: 5
+            periodSeconds: 10
+          resources:
+            {}
+          securityContext:
+            {}
