@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vmfarms.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "vmfarms.fullname" . }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "vmfarms.fullname" . }}
+    app.kubernetes.io/instance: {{ include "vmfarms.fullname" . }}
